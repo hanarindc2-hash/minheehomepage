@@ -52,7 +52,7 @@ git remote add origin <GitHub 저장소 URL>
 git push origin main
 ```
 
-![Git 로고](URL: https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png)
+! [Git 로고](URL: https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png)
 
 ## 추가 리소스
 
