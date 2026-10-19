@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {chooseRadius,lineup,winnerAt,spinAmount,distance} from '../src/logic.mjs';
+import {demo} from '../src/demo.mjs';
+test('20 eligible restaurants retain 500m; buffet never counts',()=>{const p=Array.from({length:20},(_,i)=>({id:i,name:'식당',distance:499}));assert.equal(chooseRadius(p).radius,500);assert.equal(chooseRadius([...p.slice(1),{name:'한식 뷔페',distance:100}]).radius,700)});
+test('expanded radius excludes restaurants beyond 700m and Korean buffets',()=>{const result=chooseRadius([{name:'일식',distance:501},{name:'멀리',distance:701},{name:'한식부페',distance:200},{name:'밥집',categoryName:'음식점 > 한식뷔페',distance:200}]);assert.equal(result.radius,700);assert.deepEqual(result.places.map(p=>p.name),['일식'])});
+test('lineups contain exactly 10 unique candidates and all available cuisines',()=>{for(let i=0;i<100;i++){const items=lineup(demo);assert.equal(items.length,10);assert.equal(new Set(items.map(x=>x.id)).size,10);assert.equal(new Set(items.map(x=>x.category)).size,5);assert.ok(Math.abs(items.reduce((a,b)=>a+b.weight,0)-1)<1e-12);assert.ok(items.every(p=>p.weight>0));}});
+test('lineups and probabilities change between draws',()=>{assert.notDeepEqual(lineup(demo),lineup(demo))});
+test('pointer selects the actual visible wedge with unequal sizes',()=>{const items=[{id:'a',weight:.1},{id:'b',weight:.2},{id:'c',weight:.7}];assert.equal(winnerAt(items,342).id,'a');assert.equal(winnerAt(items,288).id,'b');assert.equal(winnerAt(items,180).id,'c');assert.equal(winnerAt(items,720).id,'a');for(let angle=0;angle<360;angle++)assert.ok(winnerAt(items,angle));});
+test('hold strength is monotonic and capped at 5 seconds',()=>{assert.ok(spinAmount(5,()=>0)>spinAmount(1,()=>0));assert.equal(spinAmount(5,()=>0),spinAmount(8,()=>0));assert.equal(distance({lat:37.4,lng:126.8},{lat:37.4,lng:126.8}),0)});

@@ -1,0 +1,7 @@
+export const CATEGORIES=['한식','중식','일식','양식','기타'];
+export function distance(a,b){const rad=x=>x*Math.PI/180;const dlat=rad(b.lat-a.lat),dlon=rad(b.lng-a.lng);const q=Math.sin(dlat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dlon/2)**2;return Math.round(6371000*2*Math.atan2(Math.sqrt(q),Math.sqrt(1-q)));}
+export function allowed(p){return !/한식\s*뷔페|한식\s*부페/.test(p.name+' '+(p.categoryName||''));}
+export function chooseRadius(places){const valid=places.filter(allowed);const nearby=valid.filter(p=>p.distance<=500);return {radius:nearby.length>=20?500:700,places:nearby.length>=20?nearby:valid.filter(p=>p.distance<=700)};}
+export function lineup(places,random=Math.random){const buckets=CATEGORIES.map(c=>places.filter(p=>p.category===c).map(p=>({...p})));const pick=[];while(pick.length<10&&buckets.some(b=>b.length)){for(const b of buckets){if(b.length&&pick.length<10)pick.push(b.splice(Math.floor(random()*b.length),1)[0]);}}for(let i=pick.length-1;i>0;i--){let j=Math.floor(random()*(i+1));[pick[i],pick[j]]=[pick[j],pick[i]];}const raw=pick.map(()=>0.65+random()*1.1),total=raw.reduce((a,b)=>a+b,0);return pick.map((p,i)=>({...p,weight:raw[i]/total}));}
+export function winnerAt(items,rotation){const point=((360-rotation%360)%360)/360;let sum=0;return items.find(p=>(sum+=p.weight)>point)||items.at(-1);}
+export function spinAmount(seconds,random=Math.random){return 360*(4+Math.min(5,Math.max(0,seconds))*1.6)+random()*360;}

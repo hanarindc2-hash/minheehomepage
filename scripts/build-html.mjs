@@ -1,0 +1,15 @@
+import {build} from 'vite';
+import {mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {restaurants} from '../src/restaurants.mjs';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const bundle=await build({root,mode:'standalone',configFile:false,define:{'process.env.NODE_ENV':JSON.stringify('production')},build:{minify:'esbuild',write:false,cssCodeSplit:false,lib:{entry:path.join(root,'src/main.jsx'),name:'LunchSpin',formats:['iife']},rollupOptions:{output:{inlineDynamicImports:true}}}});
+const output=(Array.isArray(bundle)?bundle[0]:bundle).output;
+const js=output.filter(x=>x.type==='chunk').map(x=>x.code).join('\n').replace(/<\/script/gi,'<\\/script');
+const css=output.filter(x=>x.type==='asset'&&x.fileName.endsWith('.css')).map(x=>x.source).join('\n').replace(/@import\s*(?:url\([^)]*\)|["'][^"']+["'])\s*;/g,'').replace(/<\/style/gi,'<\\/style');
+if(!js||!css)throw new Error('Missing bundled JavaScript or styles');
+const html=`<!doctype html>\n<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f6f7f2"><meta name="description" content="최대 5초 누르고 돌리는 점심 돌림판. 제공 자료 기준 음식점 ${restaurants.length}곳 중 10곳을 고르는 공유용 돌림판."><title>점심 뭐 먹지? — 공유용 돌림판</title><style>${css}</style></head><body><div id="root"></div><script>${js}</script></body></html>`;
+await mkdir(path.join(root,'share'),{recursive:true});
+await writeFile(path.join(root,'share','lunch-spin.html'),html);
+console.log('Created share/lunch-spin.html — self-contained, no server or external assets required.');
